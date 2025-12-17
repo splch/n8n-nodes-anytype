@@ -34,7 +34,7 @@ export class Anytype implements INodeType {
 
 		requestDefaults: {
 			baseURL:
-				'={{ ($credentials && $credentials.baseUrl) ? $credentials.baseUrl : "http://localhost:31009/v1" }}',
+				'={{ ($credentials && $credentials.baseUrl) ? $credentials.baseUrl : "http://127.0.0.1:31009/v1" }}',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',

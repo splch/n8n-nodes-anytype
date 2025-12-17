@@ -18,7 +18,7 @@ export class AnytypeApi implements ICredentialType {
 			name: 'baseUrl',
 			type: 'string',
 			required: true,
-			default: 'http://localhost:31009/v1',
+			default: 'http://127.0.0.1:31009/v1',
 			description: 'Anytype API base URL (usually Anytype Desktop local API)',
 		},
 		{

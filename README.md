@@ -25,7 +25,7 @@ Follow the n8n community nodes installation guide.
 Create **Anytype API** credentials in n8n:
 
 - **Base URL**:
-  - Default: `http://localhost:31009/v1`
+  - Default: `http://127.0.0.1:31009/v1`
   - Change if your Anytype API is exposed elsewhere.
 - **API Version**:
   - Default: `2025-11-08`
