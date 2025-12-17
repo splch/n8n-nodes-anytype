@@ -1,4 +1,4 @@
-import type { INodeProperties } from 'n8n-workflow';
+import type { IDataObject, INodeProperties } from 'n8n-workflow';
 
 const showOnlyForRequest = {
 	resource: ['request'],
@@ -8,6 +8,11 @@ const showOnlyForWriteMethods = {
 	resource: ['request'],
 	operation: ['post', 'patch', 'put', 'delete'],
 };
+
+// n8n declarative routing expects `qs` to be an IDataObject.
+// We want to let users pass arbitrary JSON, so we keep it as an expression string
+// and cast it to satisfy TypeScript.
+const qsFromParams = '={{$parameter.queryParameters}}' as unknown as IDataObject;
 
 export const requestDescription: INodeProperties[] = [
 	{
@@ -25,7 +30,7 @@ export const requestDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '={{$parameter.endpoint}}',
-						qs: '={{$parameter.queryParameters}}',
+						qs: qsFromParams,
 					},
 				},
 			},
@@ -37,7 +42,7 @@ export const requestDescription: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '={{$parameter.endpoint}}',
-						qs: '={{$parameter.queryParameters}}',
+						qs: qsFromParams,
 						body: '={{$parameter.body}}',
 					},
 				},
@@ -50,7 +55,7 @@ export const requestDescription: INodeProperties[] = [
 					request: {
 						method: 'PATCH',
 						url: '={{$parameter.endpoint}}',
-						qs: '={{$parameter.queryParameters}}',
+						qs: qsFromParams,
 						body: '={{$parameter.body}}',
 					},
 				},
@@ -63,7 +68,7 @@ export const requestDescription: INodeProperties[] = [
 					request: {
 						method: 'PUT',
 						url: '={{$parameter.endpoint}}',
-						qs: '={{$parameter.queryParameters}}',
+						qs: qsFromParams,
 						body: '={{$parameter.body}}',
 					},
 				},
@@ -76,7 +81,7 @@ export const requestDescription: INodeProperties[] = [
 					request: {
 						method: 'DELETE',
 						url: '={{$parameter.endpoint}}',
-						qs: '={{$parameter.queryParameters}}',
+						qs: qsFromParams,
 						body: '={{$parameter.body}}',
 					},
 				},
@@ -93,7 +98,7 @@ export const requestDescription: INodeProperties[] = [
 		default: '/spaces',
 		displayOptions: { show: showOnlyForRequest },
 		description:
-			'API path (e.g. /spaces) or full URL. If you pass a full URL, it should work as an absolute request.',
+			'API path (for example /spaces) or full URL. If you pass a full URL, it will be used as-is.',
 	},
 
 	{
@@ -102,7 +107,7 @@ export const requestDescription: INodeProperties[] = [
 		type: 'json',
 		default: {},
 		displayOptions: { show: showOnlyForRequest },
-		description: 'Query string parameters as JSON object (e.g. {"limit": 10, "offset": 0})',
+		description: 'Query string parameters as JSON (for example {"limit": 10, "offset": 0})',
 	},
 
 	{
