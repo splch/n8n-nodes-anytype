@@ -104,7 +104,6 @@ export const listsDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForAnyListOperation },
-		description: 'Space ID',
 	},
 	{
 		displayName: 'List ID',

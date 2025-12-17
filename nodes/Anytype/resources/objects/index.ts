@@ -29,21 +29,6 @@ export const objectsDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForObjects },
 		options: [
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List objects',
-				description: 'List objects in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/objects',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
 				name: 'Create',
 				value: 'create',
 				action: 'Create an object',
@@ -60,6 +45,18 @@ export const objectsDescription: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Delete an object',
+				description: 'Delete (archive) an object',
+				routing: {
+					request: {
+						method: 'DELETE',
+						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
+					},
+				},
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				action: 'Get an object',
@@ -68,6 +65,21 @@ export const objectsDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
+					},
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+					},
+				},
+			},
+			{
+				name: 'Get Many',
+				value: 'getAll',
+				action: 'List objects',
+				description: 'List objects in a space',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/spaces/{{$parameter.spaceId}}/objects',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -90,18 +102,6 @@ export const objectsDescription: INodeProperties[] = [
 					},
 				},
 			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete an object',
-				description: 'Delete (archive) an object',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
-					},
-				},
-			},
 		],
 		default: 'getAll',
 	},
@@ -113,7 +113,6 @@ export const objectsDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForObjects },
-		description: 'Space ID',
 	},
 
 	{
@@ -123,7 +122,6 @@ export const objectsDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForObjectGetUpdateDelete },
-		description: 'Object ID',
 	},
 
 	{

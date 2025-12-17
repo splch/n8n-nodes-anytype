@@ -64,7 +64,6 @@ export const membersDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForMembers },
-		description: 'Space ID',
 	},
 
 	{

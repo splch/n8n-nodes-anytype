@@ -29,21 +29,6 @@ export const tagsDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForTags },
 		options: [
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List tags',
-				description: 'List tags in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/tags',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
 				name: 'Create',
 				value: 'create',
 				action: 'Create a tag',
@@ -60,6 +45,18 @@ export const tagsDescription: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Delete a tag',
+				description: 'Delete a tag',
+				routing: {
+					request: {
+						method: 'DELETE',
+						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
+					},
+				},
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				action: 'Get a tag',
@@ -68,6 +65,21 @@ export const tagsDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
+					},
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+					},
+				},
+			},
+			{
+				name: 'Get Many',
+				value: 'getAll',
+				action: 'List tags',
+				description: 'List tags in a space',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/spaces/{{$parameter.spaceId}}/tags',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -90,18 +102,6 @@ export const tagsDescription: INodeProperties[] = [
 					},
 				},
 			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a tag',
-				description: 'Delete a tag',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
-					},
-				},
-			},
 		],
 		default: 'getAll',
 	},
@@ -113,7 +113,6 @@ export const tagsDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForTags },
-		description: 'Space ID',
 	},
 
 	{
@@ -123,7 +122,6 @@ export const tagsDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForTagGetUpdateDelete },
-		description: 'Tag ID',
 	},
 
 	{

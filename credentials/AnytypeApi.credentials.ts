@@ -3,12 +3,15 @@ import type {
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
+	Icon,
 } from 'n8n-workflow';
 
 export class AnytypeApi implements ICredentialType {
 	name = 'anytypeApi';
 
 	displayName = 'Anytype API';
+
+	icon: Icon = 'file:anytype.svg';
 
 	documentationUrl = 'https://github.com/splch/n8n-nodes-anytype#credentials';
 

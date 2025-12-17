@@ -69,7 +69,6 @@ export const templatesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForAnyTemplateOperation },
-		description: 'Space ID',
 	},
 	{
 		displayName: 'Type ID',
@@ -78,7 +77,6 @@ export const templatesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForAnyTemplateOperation },
-		description: 'Type ID',
 	},
 	{
 		displayName: 'Template ID',
@@ -87,7 +85,6 @@ export const templatesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForTemplateGet },
-		description: 'Template ID',
 	},
 
 	...paginationFields(showOnlyForTemplatesGetAll),

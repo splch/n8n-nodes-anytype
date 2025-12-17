@@ -105,7 +105,6 @@ export const spacesDescription: INodeProperties[] = [
 		displayOptions: {
 			show: showOnlyForSpaceGetOrUpdate,
 		},
-		description: 'Space ID',
 	},
 
 	{

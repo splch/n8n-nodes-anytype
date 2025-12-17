@@ -98,8 +98,7 @@ export const searchDescription: INodeProperties[] = [
 		displayOptions: {
 			show: showOnlyForAnySearch,
 		},
-		description:
-			'SearchRequest JSON. Example: {"query":"invoice","types":["page","task"],"sort":[...],"filters":[...]}',
+		description: 'SearchRequest JSON. Example: {"query":"invoice","types":["page","task"],"sort":[...],"filters":[...]}.',
 	},
 
 	...paginationFields(showOnlyForAnySearch),

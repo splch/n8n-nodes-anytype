@@ -29,21 +29,6 @@ export const typesDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForTypes },
 		options: [
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List types',
-				description: 'List types in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/types',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
 				name: 'Create',
 				value: 'create',
 				action: 'Create a type',
@@ -60,6 +45,18 @@ export const typesDescription: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Delete a type',
+				description: 'Delete a type',
+				routing: {
+					request: {
+						method: 'DELETE',
+						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
+					},
+				},
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				action: 'Get a type',
@@ -68,6 +65,21 @@ export const typesDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
+					},
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+					},
+				},
+			},
+			{
+				name: 'Get Many',
+				value: 'getAll',
+				action: 'List types',
+				description: 'List types in a space',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/spaces/{{$parameter.spaceId}}/types',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -90,18 +102,6 @@ export const typesDescription: INodeProperties[] = [
 					},
 				},
 			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a type',
-				description: 'Delete a type',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
-					},
-				},
-			},
 		],
 		default: 'getAll',
 	},
@@ -113,7 +113,6 @@ export const typesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForTypes },
-		description: 'Space ID',
 	},
 
 	{
@@ -123,7 +122,6 @@ export const typesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForTypeGetUpdateDelete },
-		description: 'Type ID',
 	},
 
 	{

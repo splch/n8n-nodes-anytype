@@ -29,21 +29,6 @@ export const propertiesDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForProperties },
 		options: [
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List properties',
-				description: 'List properties in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/properties',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
 				name: 'Create',
 				value: 'create',
 				action: 'Create a property',
@@ -60,6 +45,18 @@ export const propertiesDescription: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Delete a property',
+				description: 'Delete a property',
+				routing: {
+					request: {
+						method: 'DELETE',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
+					},
+				},
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				action: 'Get a property',
@@ -68,6 +65,21 @@ export const propertiesDescription: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
+					},
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+					},
+				},
+			},
+			{
+				name: 'Get Many',
+				value: 'getAll',
+				action: 'List properties',
+				description: 'List properties in a space',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/spaces/{{$parameter.spaceId}}/properties',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -90,18 +102,6 @@ export const propertiesDescription: INodeProperties[] = [
 					},
 				},
 			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a property',
-				description: 'Delete a property',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
-					},
-				},
-			},
 		],
 		default: 'getAll',
 	},
@@ -113,7 +113,6 @@ export const propertiesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForProperties },
-		description: 'Space ID',
 	},
 
 	{
@@ -123,7 +122,6 @@ export const propertiesDescription: INodeProperties[] = [
 		required: true,
 		default: '',
 		displayOptions: { show: showOnlyForPropertyGetUpdateDelete },
-		description: 'Property ID',
 	},
 
 	{

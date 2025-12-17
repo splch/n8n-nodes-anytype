@@ -18,7 +18,6 @@ export function paginationFields(
 		pageSize?: number;
 	},
 ): INodeProperties[] {
-	const defaultLimit = options?.defaultLimit ?? 100;
 	const maxLimit = options?.maxLimit ?? 1000;
 	const pageSize = options?.pageSize ?? 100;
 
@@ -29,7 +28,7 @@ export function paginationFields(
 			type: 'boolean',
 			displayOptions: { show },
 			default: false,
-			description: 'Whether to return all results (uses offset/limit pagination)',
+			description: 'Whether to return all results or only up to a given limit',
 			routing: {
 				send: {
 					paginate: '={{ $value }}',
@@ -61,7 +60,7 @@ export function paginationFields(
 				minValue: 1,
 				maxValue: maxLimit,
 			},
-			default: defaultLimit,
+			default: 50,
 			description: 'Max number of results to return',
 			routing: {
 				send: {
