@@ -2,6 +2,8 @@
 
 An n8n community node for the **Anytype API**.
 
+https://github.com/user-attachments/assets/59b52a17-696c-450f-8836-d1d068232488
+
 It supports the official Anytype API resources:
 
 - Auth (Create Challenge, Create API Key)
