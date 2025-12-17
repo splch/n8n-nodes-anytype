@@ -132,5 +132,5 @@ If you need the full raw response (including `pagination`), use **API Request**.
 
 ## Resources
 
-* n8n community nodes ([documentation](docs.n8n.io/integrations/community-nodes/))
+* n8n community nodes ([documentation](https://docs.n8n.io/integrations/community-nodes/))
 * Anytype developer docs ([API reference](https://developers.anytype.io/docs/reference))
