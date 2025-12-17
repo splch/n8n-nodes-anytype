@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-anytype",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "n8n community node for the Anytype API",
   "license": "MIT",
   "homepage": "https://n8n.io/",
@@ -12,7 +12,7 @@
   ],
   "author": {
     "name": "Spencer",
-    "email": "25377399+splch@users.noreply.github.com"
+    "email": "spence@duck.com"
   },
   "repository": {
     "type": "git",
