@@ -10,17 +10,33 @@ export class AnytypeApi implements ICredentialType {
 
 	displayName = 'Anytype API';
 
-	// Link to your community node's README
-	documentationUrl = 'https://github.com/org/-anytype?tab=readme-ov-file#credentials';
+	documentationUrl = 'https://github.com/splch/n8n-nodes-anytype#credentials';
 
 	properties: INodeProperties[] = [
 		{
-			displayName: 'Access Token',
+			displayName: 'Base URL',
+			name: 'baseUrl',
+			type: 'string',
+			required: true,
+			default: 'http://localhost:31009/v1',
+			description: 'Anytype API base URL (usually Anytype Desktop local API)',
+		},
+		{
+			displayName: 'API Version',
+			name: 'apiVersion',
+			type: 'string',
+			required: true,
+			default: '2025-11-08',
+			description: 'Value for the Anytype-Version header',
+		},
+		{
+			displayName: 'API Key',
 			name: 'accessToken',
 			type: 'string',
 			typeOptions: { password: true },
 			required: true,
 			default: '',
+			description: 'API key used as a Bearer token (Authorization header)',
 		},
 	];
 
@@ -35,8 +51,13 @@ export class AnytypeApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: 'http://localhost:31009/v1',
-			url: '/v1/user',
+			baseURL: '={{$credentials.baseUrl}}',
+			url: '/spaces',
+			method: 'GET',
+			headers: {
+				'Anytype-Version': '={{$credentials.apiVersion}}',
+				Accept: 'application/json',
+			},
 		},
 	};
 }

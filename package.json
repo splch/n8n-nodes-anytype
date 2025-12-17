@@ -1,17 +1,17 @@
 {
   "name": "n8n-nodes-anytype",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n community node for the Anytype API",
   "license": "MIT",
-  "homepage": "",
-  "keywords": ["n8n-community-node-package"],
+  "homepage": "https://n8n.io/",
+  "keywords": ["n8n-community-node-package", "anytype", "knowledge-base", "notes"],
   "author": {
     "name": "Spencer",
     "email": "25377399+splch@users.noreply.github.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/splch/n8n-nodes-anytype.git"
   },
   "scripts": {
     "build": "n8n-node build",

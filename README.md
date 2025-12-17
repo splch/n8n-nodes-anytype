@@ -1,46 +1,134 @@
 # n8n-nodes-anytype
 
-This is an n8n community node. It lets you use _app/service name_ in your n8n workflows.
+An n8n community node for the **Anytype API**.
 
-_App/service name_ is _one or two sentences describing the service this node integrates with_.
+It supports the official Anytype API resources:
 
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
-
-[Installation](#installation)
-[Operations](#operations)
-[Credentials](#credentials)
-[Compatibility](#compatibility)
-[Usage](#usage)
-[Resources](#resources)
-[Version history](#version-history)
+- Auth (Create Challenge, Create API Key)
+- Search (Global and Space search)
+- Spaces
+- Lists
+- Members
+- Objects
+- Properties
+- Tags
+- Types
+- Templates
+- Plus an **API Request** resource for custom endpoints and advanced use cases.
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
-
-## Operations
-
-_List the operations supported by your node._
+Follow the n8n community nodes installation guide.
 
 ## Credentials
 
-_If users need to authenticate with the app/service, provide details here. You should include prerequisites (such as signing up with the service), available authentication methods, and how to set them up._
+Create **Anytype API** credentials in n8n:
 
-## Compatibility
+- **Base URL**:
+  - Default: `http://localhost:31009/v1`
+  - Change if your Anytype API is exposed elsewhere.
+- **API Version**:
+  - Default: `2025-11-08`
+  - Sent as the `Anytype-Version` header.
+- **API Key**:
+  - A token you pass as `Authorization: Bearer <token>`.
 
-_State the minimum n8n version, as well as which versions you test against. You can also include any known version incompatibility issues._
+### How to get an API key (Auth flow)
 
-## Usage
+You can do this with the node itself:
 
-_This is an optional section. Use it to help users with any difficult or confusing aspects of the node._
+1) Use **Anytype → Auth → Create Challenge** with an `App Name`
+2) Check Anytype Desktop for the 4-digit code
+3) Use **Anytype → Auth → Create API Key** with:
+   - `challenge_id` from step 1
+   - the 4-digit code
 
-_By the time users are looking for community nodes, they probably already know n8n basics. But if you expect new users, you can link to the [Try it out](https://docs.n8n.io/try-it-out/) documentation to help them get started._
+Copy the returned `api_key` into your n8n credential.
+
+## Notes on pagination
+
+Most “Get Many” endpoints return:
+```json
+{ "data": [...], "pagination": { "offset": 0, "limit": 100, "has_more": true, "total": 123 } }
+````
+
+This node automatically returns only the `data` array as n8n items when using “Get Many”.
+
+If you need the full raw response (including `pagination`), use **API Request**.
+
+## Operations
+
+### Auth
+
+* Create Challenge
+* Create API Key
+
+### Search
+
+* Search objects across all spaces
+* Search objects within a space
+
+### Spaces
+
+* Get Many
+* Create
+* Get
+* Update
+
+### Lists
+
+* Add objects to list
+* Remove object from list
+* Get list views
+* Get objects in list
+
+### Members
+
+* Get Many
+* Get
+
+### Objects
+
+* Get Many
+* Create
+* Get
+* Update
+* Delete
+
+### Properties
+
+* Get Many
+* Create
+* Get
+* Update
+* Delete
+
+### Tags
+
+* Get Many
+* Create
+* Get
+* Update
+* Delete
+
+### Types
+
+* Get Many
+* Create
+* Get
+* Update
+* Delete
+
+### Templates
+
+* Get Many
+* Get
+
+### API Request
+
+* GET / POST / PATCH / PUT / DELETE (custom endpoint)
 
 ## Resources
 
-* [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
-* _Link to app/service documentation._
-
-## Version history
-
-_This is another optional section. If your node has multiple versions, include a short description of available versions and what changed, as well as any compatibility impact._
+* n8n community nodes documentation
+* Anytype developer docs (API reference)

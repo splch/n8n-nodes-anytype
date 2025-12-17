@@ -2,16 +2,16 @@
 	"node": "n8n-nodes-anytype",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Development", "Developer Tools"],
+	"categories": ["Productivity", "Development", "Developer Tools"],
 	"resources": {
-		"credentialDocumentation": [
-			{
-				"url": "https://github.com/org/repo?tab=readme-ov-file#credentials"
-			}
-		],
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/org/repo?tab=readme-ov-file"
+				"url": "https://developers.anytype.io/docs/reference/"
+			}
+		],
+		"credentialDocumentation": [
+			{
+				"url": "https://developers.anytype.io/docs/reference/2025-11-08/create-api-key/"
 			}
 		]
 	}
