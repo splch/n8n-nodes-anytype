@@ -11,7 +11,7 @@
 		],
 		"credentialDocumentation": [
 			{
-				"url": "https://developers.anytype.io/docs/reference/2025-11-08/create-api-key/"
+				"url": "https://github.com/splch/n8n-nodes-anytype#credentials"
 			}
 		]
 	}

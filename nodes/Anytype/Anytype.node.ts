@@ -1,6 +1,5 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 
-import { authDescription } from './resources/auth';
 import { searchDescription } from './resources/search';
 import { spacesDescription } from './resources/spaces';
 import { listsDescription } from './resources/lists';
@@ -10,7 +9,6 @@ import { propertiesDescription } from './resources/properties';
 import { tagsDescription } from './resources/tags';
 import { typesDescription } from './resources/types';
 import { templatesDescription } from './resources/templates';
-import { requestDescription } from './resources/request';
 
 export class Anytype implements INodeType {
 	description: INodeTypeDescription = {
@@ -28,9 +26,7 @@ export class Anytype implements INodeType {
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 
-		// Optional so Auth endpoints can be used without a token if needed.
-		// For everything else, set credentials to avoid 401 errors.
-		credentials: [{ name: 'anytypeApi', required: false }],
+		credentials: [{ name: 'anytypeApi', required: true }],
 
 		requestDefaults: {
 			baseURL:
@@ -50,8 +46,6 @@ export class Anytype implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'API Request', value: 'request' },
-					{ name: 'Auth', value: 'auth' },
 					{ name: 'List', value: 'list' },
 					{ name: 'Member', value: 'member' },
 					{ name: 'Object', value: 'object' },
@@ -65,7 +59,6 @@ export class Anytype implements INodeType {
 				default: 'object',
 			},
 
-			...authDescription,
 			...searchDescription,
 			...spacesDescription,
 			...listsDescription,
@@ -75,7 +68,6 @@ export class Anytype implements INodeType {
 			...tagsDescription,
 			...typesDescription,
 			...templatesDescription,
-			...requestDescription,
 		],
 	};
 }

@@ -6,7 +6,6 @@ https://github.com/user-attachments/assets/59b52a17-696c-450f-8836-d1d068232488
 
 It supports the official Anytype API resources:
 
-- Auth (Create Challenge, Create API Key)
 - Search (Global and Space search)
 - Spaces
 - Lists
@@ -16,7 +15,6 @@ It supports the official Anytype API resources:
 - Tags
 - Types
 - Templates
-- Plus an **API Request** resource for custom endpoints and advanced use cases.
 
 ## Installation
 
@@ -35,17 +33,15 @@ Create **Anytype API** credentials in n8n:
 - **API Key**:
   - A token you pass as `Authorization: Bearer <token>`.
 
-### How to get an API key (Auth flow)
+### How to get an API key (outside this node)
 
-You can do this with the node itself:
+Generate the API key with Anytype's official auth flow, then paste it into the n8n credential:
 
-1) Use **Anytype → Auth → Create Challenge** with an `App Name`
+1) Create an auth challenge (`POST /auth/challenges`) with your app name
 2) Check Anytype Desktop for the 4-digit code
-3) Use **Anytype → Auth → Create API Key** with:
-   - `challenge_id` from step 1
-   - the 4-digit code
+3) Create the API key (`POST /auth/api_keys`) with the challenge ID and code
 
-Copy the returned `api_key` into your n8n credential.
+See Anytype docs: https://developers.anytype.io/docs/reference/2025-11-08/create-api-key/
 
 ## Notes on pagination
 
@@ -56,14 +52,10 @@ Most “Get Many” endpoints return:
 
 This node automatically returns only the `data` array as n8n items when using “Get Many”.
 
-If you need the full raw response (including `pagination`), use **API Request**.
+If you need the full raw response (including `pagination`) or unsupported endpoints, use n8n's
+**HTTP Request** node with your Anytype base URL, `Anytype-Version` header, and Bearer API key.
 
 ## Operations
-
-### Auth
-
-* Create Challenge
-* Create API Key
 
 ### Search
 
@@ -125,10 +117,6 @@ If you need the full raw response (including `pagination`), use **API Request**.
 
 * Get Many
 * Get
-
-### API Request
-
-* GET / POST / PATCH / PUT / DELETE (custom endpoint)
 
 ## Resources
 
