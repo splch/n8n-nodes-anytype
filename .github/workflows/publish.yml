@@ -46,6 +46,12 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Use npm 11.5.1+ for trusted publishing
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          npm install --global npm@^11.5.1
+          npm --version
+
       - name: Install dependencies
         if: steps.check-version.outputs.exists == 'false'
         run: npm ci
