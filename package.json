@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-anytype",
-  "version": "0.1.3",
+  "version": "0.1.6",
   "description": "n8n community node for the Anytype API",
   "license": "MIT",
   "homepage": "https://n8n.io/",

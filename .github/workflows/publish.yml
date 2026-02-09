@@ -2,8 +2,8 @@ name: Publish to npm
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*.*.*'
 
 jobs:
   publish:
@@ -22,6 +22,16 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
+
+      - name: Validate tag matches package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)."
+            exit 1
+          fi
 
       - name: Check if version already exists on npm
         id: check-version
@@ -46,4 +56,6 @@ jobs:
 
       - name: Publish to npm
         if: steps.check-version.outputs.exists == 'false'
+        env:
+          RELEASE_MODE: 'true'
         run: npm publish --access public --provenance
