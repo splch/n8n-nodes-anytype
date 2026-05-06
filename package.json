@@ -45,7 +45,8 @@
     "eslint": "9.32.0",
     "prettier": "3.6.2",
     "release-it": "^19.0.4",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "yaml": "^2.8.4"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
