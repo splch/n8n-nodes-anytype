@@ -36,7 +36,7 @@ export const tagsDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/tags',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
 						body: '={{$parameter.body}}',
 					},
 					output: {
@@ -52,7 +52,7 @@ export const tagsDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
 					},
 				},
 			},
@@ -64,7 +64,7 @@ export const tagsDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -79,7 +79,7 @@ export const tagsDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/tags',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
 					},
 					output: {
 						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
@@ -94,7 +94,7 @@ export const tagsDescription: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}/tags/{{$parameter.tagId}}',
+						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
 						body: '={{$parameter.body}}',
 					},
 					output: {
@@ -109,6 +109,15 @@ export const tagsDescription: INodeProperties[] = [
 	{
 		displayName: 'Space ID',
 		name: 'spaceId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: { show: showOnlyForTags },
+	},
+
+	{
+		displayName: 'Property ID',
+		name: 'propertyId',
 		type: 'string',
 		required: true,
 		default: '',
