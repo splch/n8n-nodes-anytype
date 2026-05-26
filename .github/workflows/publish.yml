@@ -14,12 +14,12 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
@@ -45,12 +45,6 @@ jobs:
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Use npm 11.5.1+ for trusted publishing
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          npm install --global npm@^11.5.1
-          npm --version
 
       - name: Install dependencies
         if: steps.check-version.outputs.exists == 'false'
