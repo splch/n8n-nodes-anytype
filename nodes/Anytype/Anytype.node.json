@@ -1,8 +1,8 @@
 {
-	"node": "n8n-nodes-anytype",
+	"node": "n8n-nodes-anytype.anytype",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Productivity", "Development", "Developer Tools"],
+	"categories": ["Productivity", "Development"],
 	"resources": {
 		"primaryDocumentation": [
 			{
