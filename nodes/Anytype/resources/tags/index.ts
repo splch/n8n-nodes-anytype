@@ -40,7 +40,7 @@ export const tagsDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
 					},
 				},
 			},
@@ -67,7 +67,7 @@ export const tagsDescription: INodeProperties[] = [
 						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
 					},
 				},
 			},
@@ -98,7 +98,7 @@ export const tagsDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
 					},
 				},
 			},

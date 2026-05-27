@@ -54,7 +54,7 @@ export const templatesDescription: INodeProperties[] = [
 						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}/templates/{{$parameter.templateId}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'template' } }],
 					},
 				},
 			},

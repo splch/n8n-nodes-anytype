@@ -40,7 +40,7 @@ export const propertiesDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
 					},
 				},
 			},
@@ -67,7 +67,7 @@ export const propertiesDescription: INodeProperties[] = [
 						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
 					},
 				},
 			},
@@ -98,7 +98,7 @@ export const propertiesDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
 					},
 				},
 			},

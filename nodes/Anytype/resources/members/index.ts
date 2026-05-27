@@ -49,7 +49,7 @@ export const membersDescription: INodeProperties[] = [
 						url: '=/spaces/{{$parameter.spaceId}}/members/{{$parameter.memberId}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'member' } }],
 					},
 				},
 			},

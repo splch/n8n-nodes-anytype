@@ -57,7 +57,7 @@ export const spacesDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
 					},
 				},
 			},
@@ -72,7 +72,7 @@ export const spacesDescription: INodeProperties[] = [
 						url: '=/spaces/{{$parameter.spaceId}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
 					},
 				},
 			},
@@ -88,7 +88,7 @@ export const spacesDescription: INodeProperties[] = [
 						body: '={{$parameter.body}}',
 					},
 					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
+						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
 					},
 				},
 			},
