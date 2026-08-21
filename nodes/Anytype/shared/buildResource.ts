@@ -3,6 +3,7 @@ import type {
 	IDataObject,
 	IExecuteSingleFunctions,
 	IHttpRequestOptions,
+	INodeExecutionData,
 	INodeProperties,
 } from 'n8n-workflow';
 
@@ -50,6 +51,50 @@ function propertyValues(ctx: Ctx): IDataObject[] {
 		.filter(Boolean) as IDataObject[];
 }
 
+function isJsonMode(ctx: Ctx): boolean {
+	return ctx.getNodeParameter('bodyMode', 'simple') === 'json';
+}
+
+function useJsonBody(ctx: Ctx, req: IHttpRequestOptions): IHttpRequestOptions {
+	const raw = ctx.getNodeParameter('jsonBody', '{}');
+	req.body = typeof raw === 'string' ? (JSON.parse(raw || '{}') as IDataObject) : raw;
+	return req;
+}
+
+/** Wrap a simple-mode body builder so JSON mode parses jsonBody instead. */
+function withJsonBody(simple: PreSend): PreSend {
+	return async function (this: Ctx, req: IHttpRequestOptions) {
+		return isJsonMode(this) ? useJsonBody(this, req) : simple.call(this, req);
+	};
+}
+
+/**
+ * Unwrap a response envelope ({ data: [...] }, { object: {...} }, ...) into
+ * items. Unlike the declarative rootProperty action, an empty payload yields
+ * one empty item instead of failing the run with "No item to return".
+ */
+function unwrapOrEmpty(property: string) {
+	return async function (
+		this: Ctx,
+		items: INodeExecutionData[],
+		response: { body: unknown },
+	): Promise<INodeExecutionData[]> {
+		const body = response.body as IDataObject;
+		const payload = body?.[property];
+		if (Array.isArray(payload)) {
+			const unwrapped = (payload as IDataObject[]).map((entry) => ({ json: entry }));
+			return unwrapped.length ? unwrapped : [{ json: {} }];
+		}
+		if (payload && typeof payload === 'object') return [{ json: payload as IDataObject }];
+		return items.length ? items : [{ json: {} }];
+	};
+}
+
+/** PreSend for raw-JSON-only operations. */
+export async function jsonBodyOnly(this: Ctx, req: IHttpRequestOptions): Promise<IHttpRequestOptions> {
+	return useJsonBody(this, req);
+}
+
 /** CreateObjectRequest: type_key, name, body, template_id, properties. */
 export async function createObjectBody(this: Ctx, req: IHttpRequestOptions): Promise<IHttpRequestOptions> {
 	const body: IDataObject = { type_key: this.getNodeParameter('typeKey') };
@@ -87,10 +132,13 @@ export async function searchBody(this: Ctx, req: IHttpRequestOptions): Promise<I
 	if (query) body.query = query;
 	const types = this.getNodeParameter('typeKeys', []) as string[];
 	if (types.length) body.types = types;
-	body.sort = {
-		property_key: this.getNodeParameter('sortBy', 'last_modified_date'),
-		direction: this.getNodeParameter('sortDirection', 'desc'),
-	} as IDataObject;
+	const sortBy = (this.getNodeParameter('sortBy', '') as string) || 'last_modified_date';
+	if (sortBy) {
+		body.sort = {
+			property_key: sortBy,
+			direction: (this.getNodeParameter('sortDirection', '') as string) || 'desc',
+		} as IDataObject;
+	}
 	const conditions = rows(this, 'filters')
 		.map((row) => {
 			const propertyKey = String(row.property_key ?? '').trim();
@@ -182,13 +230,15 @@ export function buildResource(config: ResourceConfig): INodeProperties[] {
 				action: op.name,
 				description: op.description,
 				routing: {
-					// Simple mode: preSend overwrites this; JSON mode: routed as-is.
-					request: { method: op.method, url: op.url, ...(op.body ? { body: '={{$parameter.jsonBody}}' } : {}) },
-					send: op.body && op.body !== 'json' ? { preSend: [op.body.preSend] } : undefined,
-					output: op.unwrap
-						? { postReceive: [{ type: 'rootProperty', properties: { property: op.unwrap } }] }
+					// Body is always assembled by preSend (simple fields or parsed jsonBody).
+					request: { method: op.method, url: op.url },
+					send: op.body
+						? { preSend: [op.body === 'json' ? jsonBodyOnly : withJsonBody(op.body.preSend)] }
 						: undefined,
-				},
+					output: op.unwrap
+						? { postReceive: [unwrapOrEmpty(op.unwrap)] }
+						: undefined,
+					},
 			};
 		}),
 		default: config.defaultOperation,

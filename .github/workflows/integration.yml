@@ -1,0 +1,80 @@
+name: Integration test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  ANYTYPE_CLI_VERSION: '0.1.9'
+  ANYTYPE_PORT: '31012'
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Build the node
+        run: |
+          npm ci
+          npm run build
+
+      - name: Structural check (node instantiates, routing surface intact)
+        run: |
+          node -e "
+            const { Anytype } = require('./dist/nodes/Anytype/Anytype.node.js');
+            const n = new Anytype();
+            const ops = n.description.properties.filter(p => p.name === 'operation');
+            const resources = n.description.properties.find(p => p.name === 'resource').options;
+            console.log('resources:', resources.length, '| operation groups:', ops.length, '| loadOptions:', Object.keys(n.methods.loadOptions).length);
+            if (resources.length !== 10 || ops.length !== 10 || Object.keys(n.methods.loadOptions).length !== 12) process.exit(1);
+          "
+          npm run check-drift
+
+      - name: Start headless Anytype
+        run: |
+          docker run -d --name anytype \
+            -p 127.0.0.1:${ANYTYPE_PORT}:31012 \
+            alpine:3.23 sh -c '
+              apk add --no-cache curl netcat-openbsd >/dev/null &&
+              curl -fsSL "https://github.com/anyproto/anytype-cli/releases/download/v'${ANYTYPE_CLI_VERSION}'/anytype-cli-v'${ANYTYPE_CLI_VERSION}'-linux-amd64.tar.gz" | tar xz -C /usr/local/bin anytype &&
+              exec anytype serve --listen-address 0.0.0.0:31012
+            '
+          for i in $(seq 1 60); do
+            nc -z 127.0.0.1 ${ANYTYPE_PORT} && break
+            sleep 1
+          done
+          nc -z 127.0.0.1 ${ANYTYPE_PORT}
+
+      - name: Create Anytype account + API key
+        id: anytype
+        run: |
+          docker exec anytype anytype auth create ci --listen-address 0.0.0.0:31012
+          KEY=$(docker exec anytype anytype auth apikey create ci 2>&1 | grep -oP 'Key:\s*\K\S+')
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          # wait until the REST API accepts the key
+          for i in $(seq 1 60); do
+            if curl -sf -H "Authorization: Bearer $KEY" -H "Anytype-Version: 2025-11-08" \
+                 http://127.0.0.1:${ANYTYPE_PORT}/v1/spaces | grep -q '"data"'; then
+              echo "API ready"; break
+            fi
+            sleep 1
+          done
+
+      - name: Run integration tests
+        env:
+          ANYTYPE_URL: http://127.0.0.1:${{ env.ANYTYPE_PORT }}/v1
+          ANYTYPE_API_KEY: ${{ steps.anytype.outputs.key }}
+        run: python3 scripts/integration-test.py
+
+      - name: Show Anytype logs on failure
+        if: failure()
+        run: docker logs anytype --tail 60
