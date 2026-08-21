@@ -58,13 +58,18 @@ jobs:
             nc -z 127.0.0.1 ${ANYTYPE_PORT} && break
             sleep 1
           done
+          # wait for the binary and the API port
+          for i in $(seq 1 90); do
+            docker exec anytype test -x /usr/local/bin/anytype && nc -z 127.0.0.1 ${ANYTYPE_PORT} && break
+            sleep 1
+          done
           nc -z 127.0.0.1 ${ANYTYPE_PORT}
 
       - name: Create Anytype account + API key
         id: anytype
         run: |
-          docker exec anytype anytype auth create ci --listen-address 0.0.0.0:31012
-          KEY=$(docker exec anytype anytype auth apikey create ci 2>&1 | grep -oP 'Key:\s*\K\S+')
+          docker exec anytype /usr/local/bin/anytype auth create ci --listen-address 0.0.0.0:31012
+          KEY=$(docker exec anytype /usr/local/bin/anytype auth apikey create ci 2>&1 | grep -oP 'Key:\s*\K\S+')
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           # wait until the REST API accepts the key
           for i in $(seq 1 60); do
