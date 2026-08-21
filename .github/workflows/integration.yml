@@ -68,8 +68,20 @@ jobs:
       - name: Create Anytype account + API key
         id: anytype
         run: |
-          docker exec anytype /usr/local/bin/anytype auth create ci --listen-address 0.0.0.0:31012
-          KEY=$(docker exec anytype /usr/local/bin/anytype auth apikey create ci 2>&1 | grep -oP 'Key:\s*\K\S+')
+          # the heart server needs a moment before it accepts a login
+          for i in $(seq 1 60); do
+            if docker exec anytype /usr/local/bin/anytype auth create ci --listen-address 0.0.0.0:31012; then
+              break
+            fi
+            sleep 2
+          done
+          KEY=""
+          for i in $(seq 1 30); do
+            KEY=$(docker exec anytype /usr/local/bin/anytype auth apikey create ci 2>&1 | grep -oP 'Key:\s*\K\S+' || true)
+            [ -n "$KEY" ] && break
+            sleep 2
+          done
+          if [ -z "$KEY" ]; then echo 'failed to obtain API key' >&2; exit 1; fi
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           # wait until the REST API accepts the key
           for i in $(seq 1 60); do
