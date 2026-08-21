@@ -2,123 +2,43 @@
 
 An n8n community node for the **Anytype API**.
 
-https://github.com/user-attachments/assets/59b52a17-696c-450f-8836-d1d068232488
+- **Pick from dropdowns, not IDs.** Spaces, types, templates, properties, tags, objects, lists, views, members and chats are selectable from live dropdowns (expressions still work).
+- **Simple or JSON bodies.** Creating objects, searching and setting property values use typed fields; every operation also has a raw JSON mode.
+- **Spec-grounded.** Option enums and the route table live in `nodes/Anytype/generated/spec.ts`, extracted from the official OpenAPI spec (version `2025-11-08`); `npm run check-drift` keeps the node in sync.
 
-It supports the official Anytype API resources:
-
-- Search (Global and Space search)
-- Spaces
-- Lists
-- Members
-- Objects
-- Properties
-- Tags
-- Types
-- Templates
+Resources: Search, Spaces, Objects, Lists, Members, Properties, Tags, Types, Templates, Chats.
 
 ## Installation
 
-Follow the n8n community nodes installation guide.
+Follow the n8n [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/).
 
 ## Credentials
 
-Create **Anytype API** credentials in n8n:
+Create **Anytype API** credentials:
 
-- **Base URL**:
-  - Default: `http://127.0.0.1:31009/v1`
-  - Change if your Anytype API is exposed elsewhere.
-- **API Version**:
-  - Default: `2025-11-08`
-  - Sent as the `Anytype-Version` header.
-- **API Key**:
-  - A token you pass as `Authorization: Bearer <token>`.
+- **Base URL** — default `http://127.0.0.1:31009/v1` (Anytype Desktop local API)
+- **API Version** — default `2025-11-08`, sent as the `Anytype-Version` header
+- **API Key** — sent as `Authorization: Bearer <token>`; get one via Anytype's [auth flow](https://developers.anytype.io/docs/reference/2025-11-08/create-api-key/)
 
-### How to get an API key (outside this node)
+## Common recipes
 
-Generate the API key with Anytype's official auth flow, then paste it into the n8n credential:
+- **Save anything as a page** — Object → Create: pick a Space, choose the Type (e.g. `page`), set Name and Body (Markdown). Web clipping, daily notes, journaling.
+- **Set properties** — Object → Create/Update → Properties: rows of property key → format → value. Select/multi-select take tag keys or IDs; checkbox is a toggle; dates accept `YYYY-MM-DD`.
+- **Find objects** — Search: query text, type filter, sort and AND-combined filters as fields. JSON mode for nested OR logic.
+- **Templates** — Object → Create → Template dropdown lists templates across the space's types.
+- **Collections** — List → Add Objects / Get Views / Get Objects with dropdown IDs.
+- **Chats** — Send Message, Toggle Reaction, Mark Read, Search Messages for agent/notification flows.
 
-1) Create an auth challenge (`POST /auth/challenges`) with your app name
-2) Check Anytype Desktop for the 4-digit code
-3) Create the API key (`POST /auth/api_keys`) with the challenge ID and code
+## Pagination
 
-See Anytype docs: https://developers.anytype.io/docs/reference/2025-11-08/create-api-key/
+List operations expose **Return All** and **Limit**; responses are unwrapped from `{ data: [...] }` into n8n items. For raw responses or uncovered endpoints (file upload/download, auth), use the HTTP Request node with the same credentials.
 
-## Notes on pagination
+## Development
 
-Most “Get Many” endpoints return:
-```json
-{ "data": [...], "pagination": { "offset": 0, "limit": 100, "has_more": true, "total": 123 } }
-````
+```bash
+npm run build        # compile to dist/
+npm run lint         # n8n node linting rules
+npm run check-drift  # verify node routes match generated/spec.ts
+```
 
-This node automatically returns only the `data` array as n8n items when using “Get Many”.
-
-If you need the full raw response (including `pagination`) or unsupported endpoints, use n8n's
-**HTTP Request** node with your Anytype base URL, `Anytype-Version` header, and Bearer API key.
-
-## Operations
-
-### Search
-
-* Search objects across all spaces
-* Search objects within a space
-
-### Spaces
-
-* Get Many
-* Create
-* Get
-* Update
-
-### Lists
-
-* Add objects to list
-* Remove object from list
-* Get list views
-* Get objects in list
-
-### Members
-
-* Get Many
-* Get
-
-### Objects
-
-* Get Many
-* Create
-* Get
-* Update
-* Delete
-
-### Properties
-
-* Get Many
-* Create
-* Get
-* Update
-* Delete
-
-### Tags
-
-* Get Many
-* Create
-* Get
-* Update
-* Delete
-
-### Types
-
-* Get Many
-* Create
-* Get
-* Update
-* Delete
-
-### Templates
-
-* Get Many
-* Get
-
-## Resources
-
-* n8n community nodes ([documentation](https://docs.n8n.io/integrations/community-nodes/))
-* Anytype developer docs ([API reference](https://developers.anytype.io/docs/reference))
+To bump the API version: update the default in `credentials/AnytypeApi.credentials.ts`, refresh the enums/routes in `nodes/Anytype/generated/spec.ts` from the [official spec](https://raw.githubusercontent.com/anyproto/anytype-api/main/docs/reference/openapi-2025-11-08.yaml), then run `check-drift`.

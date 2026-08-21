@@ -1,138 +1,77 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { bodyFrom, buildResource } from '../../shared/buildResource';
+import { textField } from '../../shared/fields';
+import { TypeLayouts } from '../../generated/spec';
 
-const showOnlyForTypes = {
-	resource: ['type'],
-};
+const ALL_OPS = ['create', 'delete', 'get', 'getAll', 'update'];
 
-const showOnlyForTypesGetAll = {
-	resource: ['type'],
-	operation: ['getAll'],
-};
+function typeFields(show: Record<string, string[]>, creating: boolean): INodeProperties[] {
+	return [
+		textField('name', 'Name', show, { required: creating }),
+		textField('pluralName', 'Plural Name', show, { required: creating }),
+		{
+			displayName: 'Layout',
+			name: 'layout',
+			type: 'options',
+			required: creating,
+			options: [...TypeLayouts],
+			default: '',
+			displayOptions: { show },
+		},
+		textField('key', 'Key', show, { description: 'Optional snake_case key (auto-generated when empty)' }),
+	];
+}
 
-const showOnlyForTypeGetUpdateDelete = {
-	resource: ['type'],
-	operation: ['get', 'update', 'delete'],
-};
+const map = { name: 'name', pluralName: 'plural_name', layout: 'layout', key: 'key' };
 
-const showOnlyForTypeCreateOrUpdate = {
-	resource: ['type'],
-	operation: ['create', 'update'],
-};
-
-export const typesDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForTypes },
-		options: [
-			{
-				name: 'Create',
-				value: 'create',
-				action: 'Create a type',
-				description: 'Create a new type',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/types',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'type' } }],
-					},
-				},
-			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a type',
-				description: 'Delete a type',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get a type',
-				description: 'Get a single type',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'type' } }],
-					},
-				},
-			},
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List types',
-				description: 'List types in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/types',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Update',
-				value: 'update',
-				action: 'Update a type',
-				description: 'Update a type',
-				routing: {
-					request: {
-						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'type' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForTypes },
-	},
-
-	{
-		displayName: 'Type ID',
-		name: 'typeId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForTypeGetUpdateDelete },
-	},
-
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: { show: showOnlyForTypeCreateOrUpdate },
-		description: 'CreateTypeRequest / UpdateTypeRequest JSON',
-	},
-
-	...paginationFields(showOnlyForTypesGetAll),
-];
+export const typesDescription: INodeProperties[] = buildResource({
+	resource: 'type',
+	defaultOperation: 'getAll',
+	operations: [
+		{
+			value: 'create',
+			name: 'Create',
+			method: 'POST',
+			url: '=/spaces/{{$parameter.spaceId}}/types',
+			unwrap: 'type',
+			body: { fields: (show) => typeFields(show, true), preSend: bodyFrom(map) },
+			bodyDescription:
+				'CreateTypeRequest JSON. Requires layout, name, plural_name; use JSON mode to link properties or set an icon.',
+		},
+		{
+			value: 'delete',
+			name: 'Delete',
+			method: 'DELETE',
+			url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
+			unwrap: 'type',
+		},
+		{
+			value: 'get',
+			name: 'Get',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
+			unwrap: 'type',
+		},
+		{
+			value: 'getAll',
+			name: 'Get Many',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/types',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'update',
+			name: 'Update',
+			method: 'PATCH',
+			url: '=/spaces/{{$parameter.spaceId}}/types/{{$parameter.typeId}}',
+			unwrap: 'type',
+			body: { fields: (show) => typeFields(show, false), preSend: bodyFrom(map) },
+			bodyDescription: 'UpdateTypeRequest JSON; use JSON mode to link properties or set an icon.',
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ALL_OPS, loader: 'getSpaces' },
+		{ name: 'typeId', label: 'Type', ops: ['delete', 'get', 'update'], loader: 'getTypes', dependsOn: ['spaceId'] },
+	],
+});

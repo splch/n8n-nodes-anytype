@@ -1,138 +1,82 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { bodyFrom, buildResource } from '../../shared/buildResource';
+import { textField } from '../../shared/fields';
+import { PropertyFormats } from '../../generated/spec';
 
-const showOnlyForProperties = {
-	resource: ['property'],
+const ALL_OPS = ['create', 'delete', 'get', 'getAll', 'update'];
+
+const createBody = {
+	fields: (show: Record<string, string[]>): INodeProperties[] => [
+		textField('name', 'Name', show, { required: true }),
+		{
+			displayName: 'Format',
+			name: 'format',
+			type: 'options',
+			required: true,
+			options: [...PropertyFormats],
+			default: '',
+			displayOptions: { show },
+		},
+		textField('key', 'Key', show, { description: 'Optional snake_case key (auto-generated when empty)' }),
+	],
+	preSend: bodyFrom({ name: 'name', format: 'format', key: 'key' }),
 };
 
-const showOnlyForPropertiesGetAll = {
-	resource: ['property'],
-	operation: ['getAll'],
+const updateBody = {
+	fields: (show: Record<string, string[]>): INodeProperties[] => [
+		textField('name', 'Name', show, { required: true }),
+		textField('key', 'Key', show),
+	],
+	preSend: bodyFrom({ name: 'name', key: 'key' }),
 };
 
-const showOnlyForPropertyGetUpdateDelete = {
-	resource: ['property'],
-	operation: ['get', 'update', 'delete'],
-};
-
-const showOnlyForPropertyCreateOrUpdate = {
-	resource: ['property'],
-	operation: ['create', 'update'],
-};
-
-export const propertiesDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForProperties },
-		options: [
-			{
-				name: 'Create',
-				value: 'create',
-				action: 'Create a property',
-				description: 'Create a new property',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/properties',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
-					},
-				},
-			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a property',
-				description: 'Delete a property',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get a property',
-				description: 'Get a single property',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
-					},
-				},
-			},
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List properties',
-				description: 'List properties in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/properties',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Update',
-				value: 'update',
-				action: 'Update a property',
-				description: 'Update an existing property',
-				routing: {
-					request: {
-						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'property' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForProperties },
-	},
-
-	{
-		displayName: 'Property ID',
-		name: 'propertyId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForPropertyGetUpdateDelete },
-	},
-
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: { show: showOnlyForPropertyCreateOrUpdate },
-		description: 'CreatePropertyRequest / UpdatePropertyRequest JSON',
-	},
-
-	...paginationFields(showOnlyForPropertiesGetAll),
-];
+export const propertiesDescription: INodeProperties[] = buildResource({
+	resource: 'property',
+	defaultOperation: 'getAll',
+	operations: [
+		{
+			value: 'create',
+			name: 'Create',
+			method: 'POST',
+			url: '=/spaces/{{$parameter.spaceId}}/properties',
+			unwrap: 'property',
+			body: createBody,
+			bodyDescription: 'CreatePropertyRequest JSON. Requires format and name; tags allowed for select/multi_select.',
+		},
+		{
+			value: 'delete',
+			name: 'Delete',
+			method: 'DELETE',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
+			unwrap: 'property',
+		},
+		{
+			value: 'get',
+			name: 'Get',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
+			unwrap: 'property',
+		},
+		{
+			value: 'getAll',
+			name: 'Get Many',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/properties',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'update',
+			name: 'Update',
+			method: 'PATCH',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}',
+			unwrap: 'property',
+			body: updateBody,
+			bodyDescription: 'UpdatePropertyRequest JSON. Requires name.',
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ALL_OPS, loader: 'getSpaces' },
+		{ name: 'propertyId', label: 'Property', ops: ['delete', 'get', 'update'], loader: 'getProperties', dependsOn: ['spaceId'] },
+	],
+});

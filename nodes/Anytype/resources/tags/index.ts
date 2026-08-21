@@ -1,147 +1,75 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { bodyFrom, buildResource } from '../../shared/buildResource';
+import { colorField, textField } from '../../shared/fields';
 
-const showOnlyForTags = {
-	resource: ['tag'],
+const ALL_OPS = ['create', 'delete', 'get', 'getAll', 'update'];
+
+const createBody = {
+	fields: (show: Record<string, string[]>): INodeProperties[] => [
+		textField('name', 'Name', show, { required: true }),
+		colorField(show, true),
+		textField('key', 'Key', show, { description: 'Optional custom key for the tag' }),
+	],
+	preSend: bodyFrom({ name: 'name', color: 'color', key: 'key' }),
 };
 
-const showOnlyForTagsGetAll = {
-	resource: ['tag'],
-	operation: ['getAll'],
+const updateBody = {
+	fields: (show: Record<string, string[]>): INodeProperties[] => [
+		textField('name', 'Name', show),
+		colorField(show),
+		textField('key', 'Key', show),
+	],
+	preSend: bodyFrom({ name: 'name', color: 'color', key: 'key' }),
 };
 
-const showOnlyForTagGetUpdateDelete = {
-	resource: ['tag'],
-	operation: ['get', 'update', 'delete'],
-};
-
-const showOnlyForTagCreateOrUpdate = {
-	resource: ['tag'],
-	operation: ['create', 'update'],
-};
-
-export const tagsDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForTags },
-		options: [
-			{
-				name: 'Create',
-				value: 'create',
-				action: 'Create a tag',
-				description: 'Create a new tag',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
-					},
-				},
-			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete a tag',
-				description: 'Delete a tag',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get a tag',
-				description: 'Get a single tag',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
-					},
-				},
-			},
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List tags',
-				description: 'List tags in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Update',
-				value: 'update',
-				action: 'Update a tag',
-				description: 'Update a tag',
-				routing: {
-					request: {
-						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'tag' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForTags },
-	},
-
-	{
-		displayName: 'Property ID',
-		name: 'propertyId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForTags },
-	},
-
-	{
-		displayName: 'Tag ID',
-		name: 'tagId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForTagGetUpdateDelete },
-	},
-
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: { show: showOnlyForTagCreateOrUpdate },
-		description: 'CreateTagRequest / UpdateTagRequest JSON',
-	},
-
-	...paginationFields(showOnlyForTagsGetAll),
-];
+export const tagsDescription: INodeProperties[] = buildResource({
+	resource: 'tag',
+	defaultOperation: 'getAll',
+	operations: [
+		{
+			value: 'create',
+			name: 'Create',
+			method: 'POST',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
+			unwrap: 'tag',
+			body: createBody,
+			bodyDescription: 'CreateTagRequest JSON. Requires color and name.',
+		},
+		{
+			value: 'delete',
+			name: 'Delete',
+			method: 'DELETE',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
+			unwrap: 'tag',
+		},
+		{
+			value: 'get',
+			name: 'Get',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
+			unwrap: 'tag',
+		},
+		{
+			value: 'getAll',
+			name: 'Get Many',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'update',
+			name: 'Update',
+			method: 'PATCH',
+			url: '=/spaces/{{$parameter.spaceId}}/properties/{{$parameter.propertyId}}/tags/{{$parameter.tagId}}',
+			unwrap: 'tag',
+			body: updateBody,
+			bodyDescription: 'UpdateTagRequest JSON.',
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ALL_OPS, loader: 'getSpaces' },
+		{ name: 'propertyId', label: 'Property', ops: ALL_OPS, loader: 'getProperties', dependsOn: ['spaceId'] },
+		{ name: 'tagId', label: 'Tag', ops: ['delete', 'get', 'update'], loader: 'getTags', dependsOn: ['spaceId', 'propertyId'] },
+	],
+});

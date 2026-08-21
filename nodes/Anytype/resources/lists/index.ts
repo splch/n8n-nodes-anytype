@@ -1,147 +1,64 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { bodyFrom, buildResource } from '../../shared/buildResource';
 
-const showOnlyForLists = {
-	resource: ['list'],
-};
+const ALL_OPS = ['addObjects', 'removeObject', 'getViews', 'getObjects'];
 
-const showOnlyForAnyListOperation = {
-	resource: ['list'],
-	operation: ['addObjects', 'removeObject', 'getViews', 'getObjects'],
-};
-
-const showOnlyForAddObjects = {
-	resource: ['list'],
-	operation: ['addObjects'],
-};
-
-const showOnlyForRemoveObject = {
-	resource: ['list'],
-	operation: ['removeObject'],
-};
-
-const showOnlyForGetObjects = {
-	resource: ['list'],
-	operation: ['getObjects'],
-};
-
-const showOnlyForPaginatedListReads = {
-	resource: ['list'],
-	operation: ['getViews', 'getObjects'],
-};
-
-export const listsDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForLists },
-		options: [
-			{
-				name: 'Add Objects',
-				value: 'addObjects',
-				action: 'Add objects to a list',
-				description: 'Add objects to a list (collection)',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/objects',
-						body: '={{$parameter.body}}',
+export const listsDescription: INodeProperties[] = buildResource({
+	resource: 'list',
+	defaultOperation: 'getViews',
+	operations: [
+		{
+			value: 'addObjects',
+			name: 'Add Objects',
+			description: 'Add objects to a list (collection)',
+			method: 'POST',
+			url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/objects',
+			body: {
+				fields: (show) => [
+					{
+						displayName: 'Object Names or IDs',
+						name: 'objectIds',
+						type: 'multiOptions',
+						required: true,
+						default: [],
+						displayOptions: { show },
+						typeOptions: { loadOptionsMethod: 'getObjects', loadOptionsDependsOn: ['spaceId'] },
+						description: 'Objects to add to the list. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 					},
-				},
+				],
+				preSend: bodyFrom({ objectIds: 'objects' }),
 			},
-			{
-				name: 'Remove Object',
-				value: 'removeObject',
-				action: 'Remove an object from a list',
-				description: 'Remove an object from a list (collection)',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/objects/{{$parameter.objectId}}',
-					},
-				},
-			},
-			{
-				name: 'Get Views',
-				value: 'getViews',
-				action: 'Get list views',
-				description: 'Get views for a list',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/views',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Get Objects',
-				value: 'getObjects',
-				action: 'Get objects in a list view',
-				description: 'Get objects in a list view',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/views/{{$parameter.viewId}}/objects',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-		],
-		default: 'getViews',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForAnyListOperation },
-	},
-	{
-		displayName: 'List ID',
-		name: 'listId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForAnyListOperation },
-		description: 'List (collection) object ID',
-	},
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: { show: showOnlyForAddObjects },
-		description:
-			'AddObjectsToListRequest JSON. See Anytype API docs for the exact request shape for your API version.',
-	},
-	{
-		displayName: 'Object ID',
-		name: 'objectId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForRemoveObject },
-		description: 'Object ID to remove from the list',
-	},
-	{
-		displayName: 'View ID',
-		name: 'viewId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForGetObjects },
-		description: 'View ID (from Get Views)',
-	},
-
-	...paginationFields(showOnlyForPaginatedListReads),
-];
+			bodyDescription: 'AddObjectsToListRequest JSON, e.g. {"objects":["<id>",...]}.',
+		},
+		{
+			value: 'removeObject',
+			name: 'Remove Object',
+			description: 'Remove an object from a list (collection)',
+			method: 'DELETE',
+			url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/objects/{{$parameter.objectId}}',
+		},
+		{
+			value: 'getViews',
+			name: 'Get Views',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/views',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'getObjects',
+			name: 'Get Objects',
+			description: 'Get objects in a list view',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/views/{{$parameter.viewId}}/objects',
+			unwrap: 'data',
+			paginated: true,
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ALL_OPS, loader: 'getSpaces' },
+		{ name: 'listId', label: 'List', ops: ALL_OPS, loader: 'getLists', dependsOn: ['spaceId'] },
+		{ name: 'objectId', label: 'Object', ops: ['removeObject'], loader: 'getObjects', dependsOn: ['spaceId'] },
+		{ name: 'viewId', label: 'View', ops: ['getObjects'], loader: 'getViews', dependsOn: ['spaceId', 'listId'] },
+	],
+});

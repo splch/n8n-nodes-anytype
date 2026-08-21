@@ -1,138 +1,93 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { buildResource, createObjectBody, updateObjectBody } from '../../shared/buildResource';
+import { propertyValuesField, textField } from '../../shared/fields';
 
-const showOnlyForObjects = {
-	resource: ['object'],
-};
-
-const showOnlyForObjectsGetAll = {
-	resource: ['object'],
-	operation: ['getAll'],
-};
-
-const showOnlyForObjectGetUpdateDelete = {
-	resource: ['object'],
-	operation: ['get', 'update', 'delete'],
-};
-
-const showOnlyForObjectCreateOrUpdate = {
-	resource: ['object'],
-	operation: ['create', 'update'],
-};
-
-export const objectsDescription: INodeProperties[] = [
+const createFields = (show: Record<string, string[]>): INodeProperties[] => [
 	{
-		displayName: 'Operation',
-		name: 'operation',
+		displayName: 'Type Name or ID',
+		name: 'typeKey',
 		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForObjects },
-		options: [
-			{
-				name: 'Create',
-				value: 'create',
-				action: 'Create an object',
-				description: 'Create a new object in a space',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/spaces/{{$parameter.spaceId}}/objects',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'object' } }],
-					},
-				},
-			},
-			{
-				name: 'Delete',
-				value: 'delete',
-				action: 'Delete an object',
-				description: 'Delete (archive) an object',
-				routing: {
-					request: {
-						method: 'DELETE',
-						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get an object',
-				description: 'Get a single object',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'object' } }],
-					},
-				},
-			},
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List objects',
-				description: 'List objects in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/objects',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Update',
-				value: 'update',
-				action: 'Update an object',
-				description: 'Update an existing object',
-				routing: {
-					request: {
-						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'object' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
 		required: true,
 		default: '',
-		displayOptions: { show: showOnlyForObjects },
+		displayOptions: { show },
+		typeOptions: { loadOptionsMethod: 'getTypeKeys', loadOptionsDependsOn: ['spaceId'] },
+		description: 'Type of object to create (e.g. page, task). Choose from the list or use an expression. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
-
-	{
-		displayName: 'Object ID',
-		name: 'objectId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForObjectGetUpdateDelete },
-	},
-
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: { show: showOnlyForObjectCreateOrUpdate },
-		description: 'CreateObjectRequest / UpdateObjectRequest JSON',
-	},
-
-	...paginationFields(showOnlyForObjectsGetAll),
+	textField('name', 'Name', show),
+	textField('markdown', 'Body', show, {
+		typeOptions: { editor: 'htmlEditor', rows: 8 },
+		description: 'Object body; Markdown is supported',
+	}),
+	textField('templateId', 'Template', show, {
+		typeOptions: { loadOptionsMethod: 'getTemplates', loadOptionsDependsOn: ['spaceId'] },
+		description: 'Template to create the object from',
+	}),
+	propertyValuesField(show),
 ];
+
+const updateFields = (show: Record<string, string[]>): INodeProperties[] => [
+	textField('name', 'Name', show),
+	textField('markdown', 'Body', show, {
+		typeOptions: { editor: 'htmlEditor', rows: 8 },
+		description: 'Replaces the object body; Markdown is supported',
+	}),
+	textField('typeKey', 'Type', show, {
+		typeOptions: { loadOptionsMethod: 'getTypeKeys', loadOptionsDependsOn: ['spaceId'] },
+		description: 'Change the object type (optional)',
+	}),
+	propertyValuesField(show),
+];
+
+export const objectsDescription: INodeProperties[] = buildResource({
+	resource: 'object',
+	defaultOperation: 'getAll',
+	operations: [
+		{
+			value: 'create',
+			name: 'Create',
+			description: 'Create a new object in a space',
+			method: 'POST',
+			url: '=/spaces/{{$parameter.spaceId}}/objects',
+			unwrap: 'object',
+			body: { fields: createFields, preSend: createObjectBody },
+			bodyDescription: 'CreateObjectRequest JSON. Requires type_key.',
+		},
+		{
+			value: 'delete',
+			name: 'Delete',
+			description: 'Delete (archive) an object',
+			method: 'DELETE',
+			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
+			unwrap: 'object',
+		},
+		{
+			value: 'get',
+			name: 'Get',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
+			unwrap: 'object',
+		},
+		{
+			value: 'getAll',
+			name: 'Get Many',
+			description: 'List objects in a space',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/objects',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'update',
+			name: 'Update',
+			method: 'PATCH',
+			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
+			unwrap: 'object',
+			body: { fields: updateFields, preSend: updateObjectBody },
+			bodyDescription: 'UpdateObjectRequest JSON.',
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ['create', 'delete', 'get', 'getAll', 'update'], loader: 'getSpaces' },
+		{ name: 'objectId', label: 'Object', ops: ['delete', 'get', 'update'], loader: 'getObjects', dependsOn: ['spaceId'] },
+	],
+});

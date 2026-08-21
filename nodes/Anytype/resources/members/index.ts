@@ -1,80 +1,29 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { buildResource } from '../../shared/buildResource';
 
-const showOnlyForMembers = {
-	resource: ['member'],
-};
-
-const showOnlyForMembersGetAll = {
-	resource: ['member'],
-	operation: ['getAll'],
-};
-
-const showOnlyForMemberGet = {
-	resource: ['member'],
-	operation: ['get'],
-};
-
-export const membersDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: { show: showOnlyForMembers },
-		options: [
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'List members',
-				description: 'List members in a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/members',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get a member',
-				description: 'Get a single member',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}/members/{{$parameter.memberId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'member' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForMembers },
-	},
-
-	{
-		displayName: 'Member ID',
-		name: 'memberId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: { show: showOnlyForMemberGet },
-		description: 'Member ID (or identity) from Get Many',
-	},
-
-	...paginationFields(showOnlyForMembersGetAll),
-];
+export const membersDescription: INodeProperties[] = buildResource({
+	resource: 'member',
+	defaultOperation: 'getAll',
+	operations: [
+		{
+			value: 'getAll',
+			name: 'Get Many',
+			description: 'List members of a space',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/members',
+			unwrap: 'data',
+			paginated: true,
+		},
+		{
+			value: 'get',
+			name: 'Get',
+			method: 'GET',
+			url: '=/spaces/{{$parameter.spaceId}}/members/{{$parameter.memberId}}',
+			unwrap: 'member',
+		},
+	],
+	idParams: [
+		{ name: 'spaceId', label: 'Space', ops: ['getAll', 'get'], loader: 'getSpaces' },
+		{ name: 'memberId', label: 'Member', ops: ['get'], loader: 'getMembers', dependsOn: ['spaceId'] },
+	],
+});

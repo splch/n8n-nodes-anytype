@@ -1,123 +1,39 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from '../shared/pagination';
+import { bodyFrom, buildResource } from '../../shared/buildResource';
+import { textField } from '../../shared/fields';
 
-const showOnlyForSpaces = {
-	resource: ['space'],
+const spaceBody = {
+	fields: (show: Record<string, string[]>): INodeProperties[] => [
+		textField('name', 'Name', show),
+		textField('description', 'Description', show),
+	],
+	preSend: bodyFrom({ name: 'name', description: 'description' }),
 };
 
-const showOnlyForSpacesGetAll = {
-	resource: ['space'],
-	operation: ['getAll'],
-};
-
-const showOnlyForSpaceGetOrUpdate = {
-	resource: ['space'],
-	operation: ['get', 'update'],
-};
-
-const showOnlyForSpaceCreateOrUpdate = {
-	resource: ['space'],
-	operation: ['create', 'update'],
-};
-
-export const spacesDescription: INodeProperties[] = [
-	{
-		displayName: 'Operation',
-		name: 'operation',
-		type: 'options',
-		noDataExpression: true,
-		displayOptions: {
-			show: showOnlyForSpaces,
+export const spacesDescription: INodeProperties[] = buildResource({
+	resource: 'space',
+	defaultOperation: 'getAll',
+	operations: [
+		{ value: 'getAll', name: 'Get Many', method: 'GET', url: '/spaces', unwrap: 'data', paginated: true },
+		{
+			value: 'create',
+			name: 'Create',
+			method: 'POST',
+			url: '/spaces',
+			unwrap: 'space',
+			body: spaceBody,
+			bodyDescription: 'CreateSpaceRequest JSON. Requires name.',
 		},
-		options: [
-			{
-				name: 'Get Many',
-				value: 'getAll',
-				action: 'Get many spaces',
-				description: 'Get many spaces',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '/spaces',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'data' } }],
-					},
-				},
-			},
-			{
-				name: 'Create',
-				value: 'create',
-				action: 'Create a space',
-				description: 'Create a space',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '/spaces',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
-					},
-				},
-			},
-			{
-				name: 'Get',
-				value: 'get',
-				action: 'Get a space',
-				description: 'Get a space',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/spaces/{{$parameter.spaceId}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
-					},
-				},
-			},
-			{
-				name: 'Update',
-				value: 'update',
-				action: 'Update a space',
-				description: 'Update a space',
-				routing: {
-					request: {
-						method: 'PATCH',
-						url: '=/spaces/{{$parameter.spaceId}}',
-						body: '={{$parameter.body}}',
-					},
-					output: {
-						postReceive: [{ type: 'rootProperty', properties: { property: 'space' } }],
-					},
-				},
-			},
-		],
-		default: 'getAll',
-	},
-
-	{
-		displayName: 'Space ID',
-		name: 'spaceId',
-		type: 'string',
-		required: true,
-		default: '',
-		displayOptions: {
-			show: showOnlyForSpaceGetOrUpdate,
+		{ value: 'get', name: 'Get', method: 'GET', url: '=/spaces/{{$parameter.spaceId}}', unwrap: 'space' },
+		{
+			value: 'update',
+			name: 'Update',
+			method: 'PATCH',
+			url: '=/spaces/{{$parameter.spaceId}}',
+			unwrap: 'space',
+			body: spaceBody,
+			bodyDescription: 'UpdateSpaceRequest JSON.',
 		},
-	},
-
-	{
-		displayName: 'Body',
-		name: 'body',
-		type: 'json',
-		required: true,
-		default: {},
-		displayOptions: {
-			show: showOnlyForSpaceCreateOrUpdate,
-		},
-		description: 'CreateSpaceRequest / UpdateSpaceRequest JSON',
-	},
-
-	...paginationFields(showOnlyForSpacesGetAll),
-];
+	],
+	idParams: [{ name: 'spaceId', label: 'Space', ops: ['get', 'update'], loader: 'getSpaces' }],
+});

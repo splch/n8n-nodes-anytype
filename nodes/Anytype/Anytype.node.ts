@@ -1,5 +1,6 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 
+import { loadOptionsMethods } from './shared/loadOptions';
 import { searchDescription } from './resources/search';
 import { spacesDescription } from './resources/spaces';
 import { listsDescription } from './resources/lists';
@@ -9,6 +10,7 @@ import { propertiesDescription } from './resources/properties';
 import { tagsDescription } from './resources/tags';
 import { typesDescription } from './resources/types';
 import { templatesDescription } from './resources/templates';
+import { chatsDescription } from './resources/chats';
 
 export class Anytype implements INodeType {
 	description: INodeTypeDescription = {
@@ -46,6 +48,7 @@ export class Anytype implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'Chat', value: 'chat' },
 					{ name: 'List', value: 'list' },
 					{ name: 'Member', value: 'member' },
 					{ name: 'Object', value: 'object' },
@@ -68,6 +71,11 @@ export class Anytype implements INodeType {
 			...tagsDescription,
 			...typesDescription,
 			...templatesDescription,
+			...chatsDescription,
 		],
+	};
+
+	methods = {
+		loadOptions: loadOptionsMethods,
 	};
 }

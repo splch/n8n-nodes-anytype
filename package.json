@@ -1,9 +1,9 @@
 {
   "name": "n8n-nodes-anytype",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "n8n community node for the Anytype API",
   "license": "MIT",
-  "homepage": "https://n8n.io/",
+  "homepage": "https://github.com/splch/n8n-nodes-anytype",
   "keywords": [
     "n8n-community-node-package",
     "anytype",
@@ -20,11 +20,10 @@
   },
   "scripts": {
     "build": "n8n-node build",
-    "build:watch": "tsc --watch",
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
     "lint:fix": "n8n-node lint --fix",
-    "release": "n8n-node release",
+    "check-drift": "npm run build && node scripts/check-drift.mjs",
     "prepublishOnly": "n8n-node prerelease"
   },
   "files": [
@@ -44,9 +43,7 @@
     "@n8n/node-cli": "*",
     "eslint": "9.32.0",
     "prettier": "3.6.2",
-    "release-it": "^19.0.4",
-    "typescript": "5.9.2",
-    "yaml": "^2.8.4"
+    "typescript": "5.9.2"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
