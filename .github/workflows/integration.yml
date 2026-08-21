@@ -78,3 +78,34 @@ jobs:
       - name: Show Anytype logs on failure
         if: failure()
         run: docker logs anytype --tail 60
+
+      - name: Open an issue on scheduled-run failure
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'integration-failure',
+            });
+            const title = `Integration test failed (${context.runId})`;
+            const body = [
+              'The scheduled integration test failed.',
+              '',
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              `- Commit: ${context.sha}`,
+              `- Time: ${new Date().toISOString()}`,
+            ].join('\n');
+            if (issues.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issues[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['integration-failure', 'ci'],
+              });
+            }
