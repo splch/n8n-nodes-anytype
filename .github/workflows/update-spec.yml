@@ -1,0 +1,55 @@
+name: Update API spec
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Mondays 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+
+      - name: Check for newer Anytype spec
+        id: spec
+        run: |
+          SUMMARY=$(node scripts/update-spec.mjs | tail -1)
+          echo "summary=$SUMMARY" >> "$GITHUB_OUTPUT"
+          echo "$SUMMARY" | grep -q '"updated":true' && echo "updated=true" >> "$GITHUB_OUTPUT" || true
+
+      - name: Verify build, lint and drift
+        if: steps.spec.outputs.updated == 'true'
+        run: |
+          npm run lint
+          npm run check-drift
+        continue-on-error: true
+
+      - name: Open PR
+        if: steps.spec.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: bump Anytype API spec"
+          branch: bot/spec-update
+          delete-branch: true
+          title: "chore: bump Anytype API spec"
+          body: |
+            Automatic spec update.
+
+            ```
+            ${{ steps.spec.outputs.summary }}
+            ```
+
+            - `removed` routes: the pinned spec no longer offers endpoints this node calls. Check the failing drift check and update the affected resources.
+            - `added` routes: new endpoints available in the spec, candidates for new operations.
+          labels: dependencies

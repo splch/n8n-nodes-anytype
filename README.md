@@ -39,6 +39,7 @@ List operations expose **Return All** and **Limit**; responses are unwrapped fro
 npm run build        # compile to dist/
 npm run lint         # n8n node linting rules
 npm run check-drift  # verify node routes match generated/spec.ts
+npm run update-spec  # bump to the latest Anytype OpenAPI spec, if any
 ```
 
-To bump the API version: update the default in `credentials/AnytypeApi.credentials.ts`, refresh the enums/routes in `nodes/Anytype/generated/spec.ts` from the [official spec](https://raw.githubusercontent.com/anyproto/anytype-api/main/docs/reference/openapi-2025-11-08.yaml), then run `check-drift`.
+A scheduled workflow runs `update-spec` weekly and opens a PR when a newer spec appears. If the spec removed routes the node implements, the PR's drift check fails — that's the signal to update the affected resources. To bump manually: run `npm run update-spec`, then `check-drift`.
