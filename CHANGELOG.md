@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## 1.1.0
+
+- feat: Anytype Trigger node — poll for objects added to a list or created of a type; first-run baseline avoids flooding; dedup state in workflow memory
+- feat: Simplify toggle (default on) for object/search/list-view outputs — flattened `{ key: value }` properties, inverse of the input codec
+- fix: dropdown fetchers paginate beyond the first 100 entries (500-option cap)
+- fix: Body field is Markdown (dropped the htmlEditor which emitted HTML)
+- test: offline unit tests (jest) for the property codec, simplify, and trigger dedup logic; wired into CI
+
 ## 1.0.0
 
 Major rewrite (breaking).

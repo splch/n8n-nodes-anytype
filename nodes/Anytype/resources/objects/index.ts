@@ -15,7 +15,7 @@ const createFields = (show: Record<string, string[]>): INodeProperties[] => [
 	},
 	textField('name', 'Name', show),
 	textField('markdown', 'Body', show, {
-		typeOptions: { editor: 'htmlEditor', rows: 8 },
+		typeOptions: { rows: 8 },
 		description: 'Object body; Markdown is supported',
 	}),
 	textField('templateId', 'Template', show, {
@@ -28,7 +28,7 @@ const createFields = (show: Record<string, string[]>): INodeProperties[] => [
 const updateFields = (show: Record<string, string[]>): INodeProperties[] => [
 	textField('name', 'Name', show),
 	textField('markdown', 'Body', show, {
-		typeOptions: { editor: 'htmlEditor', rows: 8 },
+		typeOptions: { rows: 8 },
 		description: 'Replaces the object body; Markdown is supported',
 	}),
 	textField('typeKey', 'Type', show, {
@@ -49,6 +49,7 @@ export const objectsDescription: INodeProperties[] = buildResource({
 			method: 'POST',
 			url: '=/spaces/{{$parameter.spaceId}}/objects',
 			unwrap: 'object',
+			simplify: true,
 			body: { fields: createFields, preSend: createObjectBody },
 			bodyDescription: 'CreateObjectRequest JSON. Requires type_key.',
 		},
@@ -59,6 +60,7 @@ export const objectsDescription: INodeProperties[] = buildResource({
 			method: 'DELETE',
 			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
 			unwrap: 'object',
+			simplify: true,
 		},
 		{
 			value: 'get',
@@ -66,6 +68,7 @@ export const objectsDescription: INodeProperties[] = buildResource({
 			method: 'GET',
 			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
 			unwrap: 'object',
+			simplify: true,
 		},
 		{
 			value: 'getAll',
@@ -74,6 +77,7 @@ export const objectsDescription: INodeProperties[] = buildResource({
 			method: 'GET',
 			url: '=/spaces/{{$parameter.spaceId}}/objects',
 			unwrap: 'data',
+			simplify: true,
 			paginated: true,
 		},
 		{
@@ -82,6 +86,7 @@ export const objectsDescription: INodeProperties[] = buildResource({
 			method: 'PATCH',
 			url: '=/spaces/{{$parameter.spaceId}}/objects/{{$parameter.objectId}}',
 			unwrap: 'object',
+			simplify: true,
 			body: { fields: updateFields, preSend: updateObjectBody },
 			bodyDescription: 'UpdateObjectRequest JSON.',
 		},

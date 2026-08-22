@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-anytype",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "n8n community node for the Anytype API",
   "license": "MIT",
   "homepage": "https://github.com/splch/n8n-nodes-anytype",
@@ -22,6 +22,7 @@
     "build": "n8n-node build",
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
+    "test": "jest",
     "lint:fix": "n8n-node lint --fix",
     "check-drift": "npm run build && node scripts/check-drift.mjs",
     "update-spec": "node scripts/update-spec.mjs",
@@ -37,13 +38,17 @@
       "dist/credentials/AnytypeApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Anytype/Anytype.node.js"
+      "dist/nodes/Anytype/Anytype.node.js",
+      "dist/nodes/AnytypeTrigger/AnytypeTrigger.node.js"
     ]
   },
   "devDependencies": {
     "@n8n/node-cli": "*",
+    "@types/jest": "^30.0.0",
     "eslint": "9.32.0",
+    "jest": "^30.4.2",
     "prettier": "3.6.2",
+    "ts-jest": "^29.4.12",
     "typescript": "5.9.2",
     "yaml": "^2.9.0"
   },

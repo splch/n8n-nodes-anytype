@@ -52,6 +52,7 @@ export const listsDescription: INodeProperties[] = buildResource({
 			method: 'GET',
 			url: '=/spaces/{{$parameter.spaceId}}/lists/{{$parameter.listId}}/views/{{$parameter.viewId}}/objects',
 			unwrap: 'data',
+			simplify: true,
 			paginated: true,
 		},
 	],

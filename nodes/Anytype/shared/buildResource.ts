@@ -17,7 +17,11 @@ type PreSend = (this: Ctx, requestOptions: IHttpRequestOptions) => Promise<IHttp
 
 const LIST_FORMATS = new Set(['multi_select', 'files', 'objects']);
 
-function typedValue(format: string, raw: unknown): { field: string; value: IDataObject[string] } | null {
+/** Convert a raw UI value into the spec's { field, value } pair for its format. */
+export function typedValue(
+	format: string,
+	raw: unknown,
+): { field: string; value: IDataObject[string] } | null {
 	if (LIST_FORMATS.has(format)) {
 		const list = String(raw ?? '').split(',').map((v) => v.trim()).filter(Boolean);
 		return list.length ? { field: format, value: list } : null;
@@ -36,19 +40,24 @@ function typedValue(format: string, raw: unknown): { field: string; value: IData
 	}
 }
 
-function rows(ctx: Ctx, name: string): IDataObject[] {
-	const param = ctx.getNodeParameter(name, {}) as IDataObject;
-	return Object.values(param ?? {}) as IDataObject[];
-}
-
-function propertyValues(ctx: Ctx): IDataObject[] {
-	return rows(ctx, 'properties')
+/** Build PropertyValue entries from property rows ({ key, format, value }). */
+export function propertyValuesFromRows(rowList: IDataObject[]): IDataObject[] {
+	return rowList
 		.map((row) => {
 			const key = String(row.key ?? '').trim();
 			const tv = key && typedValue(String(row.format ?? 'text'), row.value);
 			return tv ? { key, [tv.field]: tv.value } : null;
 		})
 		.filter(Boolean) as IDataObject[];
+}
+
+function rows(ctx: Ctx, name: string): IDataObject[] {
+	const param = ctx.getNodeParameter(name, {}) as IDataObject;
+	return Object.values(param ?? {}) as IDataObject[];
+}
+
+function propertyValues(ctx: Ctx): IDataObject[] {
+	return propertyValuesFromRows(rows(ctx, 'properties'));
 }
 
 function isJsonMode(ctx: Ctx): boolean {
@@ -88,6 +97,54 @@ function unwrapOrEmpty(property: string) {
 		if (payload && typeof payload === 'object') return [{ json: payload as IDataObject }];
 		return items.length ? items : [{ json: {} }];
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Simplify (postReceive): flatten an Anytype object into scalar fields
+// ---------------------------------------------------------------------------
+
+function plainValue(p: IDataObject): unknown {
+	const format = p.format as string | undefined;
+	if (format === 'select') {
+		return (p.select as IDataObject | undefined)?.name ?? null;
+	}
+	if (format && LIST_FORMATS.has(format)) {
+		const list = p[format];
+		if (!Array.isArray(list)) return list ?? null;
+		return list.map((v) =>
+			v && typeof v === 'object' ? ((v as IDataObject).name ?? (v as IDataObject).id ?? v) : v,
+		);
+	}
+	return format && format in p ? p[format] : null;
+}
+
+/** Flatten one Anytype object (or a wrapper like { object: {...} }) for output. */
+export function simplifyObjectJson(obj: IDataObject): IDataObject {
+	const inner = (obj.object && typeof obj.object === 'object' ? obj.object : obj) as IDataObject;
+	const out: IDataObject = {
+		id: inner.id,
+		name: inner.name,
+		layout: inner.layout,
+		type: (inner.type as IDataObject | undefined)?.key ?? null,
+	};
+	if (inner.snippet !== undefined) out.snippet = inner.snippet;
+	if (inner.space_id !== undefined) out.space_id = inner.space_id;
+	const properties = inner.properties;
+	if (Array.isArray(properties)) {
+		out.properties = Object.fromEntries(
+			(properties as IDataObject[]).map((p) => [String(p.key ?? p.name), plainValue(p)]),
+		);
+	}
+	return out;
+}
+
+/** postReceive: flatten each item's object payload when Simplify is on. */
+async function simplifyItems(
+	this: Ctx,
+	items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+	if (this.getNodeParameter('simplify', 0) === false) return items;
+	return items.map((item) => ({ ...item, json: simplifyObjectJson(item.json) }));
 }
 
 /** PreSend for raw-JSON-only operations. */
@@ -183,6 +240,8 @@ export interface Op {
 	description?: string;
 	/** Response envelope key to unwrap into items ('data', 'object', ...). */
 	unwrap?: string;
+	/** Adds a Simplify toggle that flattens object payloads into scalar fields. */
+	simplify?: boolean;
 	/** Adds Return All / Limit params wired to offset pagination. */
 	paginated?: boolean;
 	/** 'json': raw JSON body. Otherwise: Simple/JSON toggle; simple fields assembled by preSend. */
@@ -215,6 +274,7 @@ export function buildResource(config: ResourceConfig): INodeProperties[] {
 	const { resource } = config;
 	const out: INodeProperties[] = [];
 	const paginatedOps: string[] = [];
+	const simplifyOps: string[] = [];
 
 	out.push({
 		displayName: 'Operation',
@@ -224,6 +284,7 @@ export function buildResource(config: ResourceConfig): INodeProperties[] {
 		displayOptions: { show: { resource: [resource] } },
 		options: config.operations.map((op) => {
 			if (op.paginated) paginatedOps.push(op.value);
+			if (op.simplify) simplifyOps.push(op.value);
 			return {
 				name: op.name,
 				value: op.value,
@@ -236,7 +297,7 @@ export function buildResource(config: ResourceConfig): INodeProperties[] {
 						? { preSend: [op.body === 'json' ? jsonBodyOnly : withJsonBody(op.body.preSend)] }
 						: undefined,
 					output: op.unwrap
-						? { postReceive: [unwrapOrEmpty(op.unwrap)] }
+						? { postReceive: op.simplify ? [unwrapOrEmpty(op.unwrap), simplifyItems] : [unwrapOrEmpty(op.unwrap)] }
 						: undefined,
 					},
 			};
@@ -288,6 +349,17 @@ export function buildResource(config: ResourceConfig): INodeProperties[] {
 			out.push(...op.body.fields({ ...show, bodyMode: ['simple'] }));
 			out.push(jsonField);
 		}
+	}
+
+	if (simplifyOps.length) {
+		out.push({
+			displayName: 'Simplify',
+			name: 'simplify',
+			type: 'boolean',
+			displayOptions: { show: { resource: [resource], operation: simplifyOps } },
+			default: true,
+			description: 'Whether to return a flattened version of each object instead of the raw API response',
+		});
 	}
 
 	if (paginatedOps.length) {

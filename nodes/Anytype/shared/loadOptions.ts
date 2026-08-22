@@ -14,16 +14,38 @@ function param(ctx: ILoadOptionsFunctions, name: string): string {
 	return '';
 }
 
+const PAGE_SIZE = 100;
+// Safety cap so pickers don't try to render thousands of options.
+const MAX_ITEMS = 500;
+
 async function get(ctx: ILoadOptionsFunctions, path: string): Promise<Record<string, unknown>> {
 	const creds = await ctx.getCredentials('anytypeApi');
 	const baseUrl = String(creds.baseUrl || 'http://127.0.0.1:31009/v1').replace(/\/$/, '');
-	return (await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'anytypeApi', {
+	const headers = { 'Anytype-Version': String(creds.apiVersion || '2025-11-08') };
+	const first = (await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'anytypeApi', {
 		method: 'GET',
 		url: `${baseUrl}${path}`,
-		headers: { 'Anytype-Version': String(creds.apiVersion || '2025-11-08') },
-		qs: { limit: 100 },
+		headers,
+		qs: { offset: 0, limit: PAGE_SIZE },
 		json: true,
 	})) as Record<string, unknown>;
+	const data = Array.isArray(first.data) ? [...(first.data as unknown[])] : [];
+	const pagination = first.pagination as Record<string, unknown> | undefined;
+	let offset = data.length;
+	while (pagination?.has_more === true && data.length < MAX_ITEMS) {
+		const page = (await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'anytypeApi', {
+			method: 'GET',
+			url: `${baseUrl}${path}`,
+			headers,
+			qs: { offset, limit: PAGE_SIZE },
+			json: true,
+		})) as Record<string, unknown>;
+		const items = Array.isArray(page.data) ? (page.data as unknown[]) : [];
+		if (!items.length) break;
+		data.push(...items);
+		offset += items.length;
+	}
+	return { ...first, data };
 }
 
 function options(
@@ -43,13 +65,33 @@ async function listTypes(ctx: ILoadOptionsFunctions): Promise<INodePropertyOptio
 	return options((await get(ctx, `/spaces/${spaceId}/types`)).data);
 }
 
+// Named exports so the trigger node can reuse these loaders.
+export async function getSpaces(ctx: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	return options((await get(ctx, '/spaces')).data);
+}
+
+export async function getTypes(ctx: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	return listTypes(ctx);
+}
+
+// Lists are objects with a collection/set layout; sorted to the top.
+export async function getLists(ctx: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	const spaceId = param(ctx, 'spaceId');
+	if (!spaceId) return [];
+	const items = (await get(ctx, `/spaces/${spaceId}/objects`)).data;
+	if (!Array.isArray(items)) return [];
+	const all = items as Item[];
+	const lists = all.filter((o) => o.layout === 'collection' || o.layout === 'set');
+	return options([...lists, ...all.filter((o) => !lists.includes(o))]);
+}
+
 export const loadOptionsMethods = {
 	async getSpaces(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-		return options((await get(this, '/spaces')).data);
+		return getSpaces(this);
 	},
 
 	async getTypes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-		return listTypes(this);
+		return getTypes(this);
 	},
 
 	async getTypeKeys(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
@@ -107,15 +149,8 @@ export const loadOptionsMethods = {
 		return options((await get(this, `/spaces/${spaceId}/objects`)).data);
 	},
 
-	// Lists are objects with a collection/set layout.
 	async getLists(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-		const spaceId = param(this, 'spaceId');
-		if (!spaceId) return [];
-		const items = (await get(this, `/spaces/${spaceId}/objects`)).data;
-		const lists = Array.isArray(items)
-			? (items as Item[]).filter((o) => o.layout === 'collection' || o.layout === 'set')
-			: [];
-		return options(lists.length ? lists : items);
+		return getLists(this);
 	},
 
 	async getViews(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
